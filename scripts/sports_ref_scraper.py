@@ -1,6 +1,5 @@
 import urllib2
 import re
-import HTMLParser
 import lxml
 from lxml import html
 
