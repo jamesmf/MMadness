@@ -2,6 +2,7 @@ import urllib2
 import re
 import lxml
 from lxml import html
+from os.path import isfile
 
 BASE_URL = "http://www.sports-reference.com"
 SCHOOLS_URL = BASE_URL + "/cbb/schools"
@@ -86,20 +87,22 @@ def download_gamelogs():
             college = college.replace("\n",'')
             fold = str(year-1)+str(year)
             ystring = prefix+str(year)
-            url = SCHOOLS_URL+"/"+college+"/"+ystring+"-gamelogs.html"
-            print url
-            d,tab = table_parse(url,"no")
-            with open("../data/"+fold+"/"+college+".txt","wb") as f2:
-                for i in range(0,len(d)):
-                    for k,v in d.iteritems():
-                        if v == i:
-                            f2.write(k+"|")
-                f2.write("\n")
-                for row in tab:
-                    if not ((row[0] == "Rk") | (row[1] == "School")):
-                        f2.write(("|".join(row).encode('utf8')))                 
-                        f2.write("\n")
-            print tab
+            if not isfile("../data/"+fold+"/"+college+".txt"):
+                url = SCHOOLS_URL+"/"+college+"/"+ystring+"-gamelogs.html"
+                print url
+                d,tab = table_parse(url,"no")
+            
+                with open("../data/"+fold+"/"+college+".txt","wb") as f2:
+                    for i in range(0,len(d)):
+                        for k,v in d.iteritems():
+                            if v == i:
+                                f2.write(k+"|")
+                    f2.write("\n")
+                    for row in tab:
+                        if not ((row[0] == "Rk") | (row[1] == "School")):
+                            f2.write(("|".join(row).encode('utf8')))                 
+                            f2.write("\n")
+                print tab
             
  
 if __name__ == "__main__":       
