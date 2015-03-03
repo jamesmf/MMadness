@@ -103,9 +103,50 @@ def download_gamelogs():
                             f2.write(("|".join(row).encode('utf8')))                 
                             f2.write("\n")
                 print tab
-            
+                
+def downloadSRS():
+    with open("../data/teamnames.txt","rb") as f:
+        names = f.readlines()
+    with open("../data/srs.txt",'wb') as f2:
+        
+        prefix = "20"
+        for year in range(11,16):
+            for college in names:
+                college = college.replace("\n",'')
+                ystring = prefix+str(year)
+                url = SCHOOLS_URL+"/"+college+"/"+ystring+".html"
+                print url
+                conn = urllib2.urlopen(url)
+                myhtml = conn.read()
+                #print myhtml
+                ind1 = myhtml.find('Simple Rating System</strong>')+250
+                ind2 = myhtml[ind1:].find("/span")+6
+                ind3 = myhtml[ind1+ind2:].find("(")
+                srs = myhtml[ind1+ind2:ind1+ind2+ind3-1]
+                print srs, ind1, ind2, ind3
+                try:
+                    float(srs.strip())
+                    f2.write(ystring+"|"+college+"|"+srs+"\n")
+                except ValueError:
+                    pass
+
+def fixSRS():
+   with open("../data/srs.txt",'rb') as f2:
+       l = f2.readlines()
+   print l
+   with open("../data/srs2.txt",'wb') as f:
+       for x in l:
+           college=x.split("|")[0]
+           srs=x.split("|")[1]
+           try:
+               float(srs)
+               f.write(college+"|"+srs+"\n")
+           except ValueError:
+               pass
  
 if __name__ == "__main__":       
     write_names()  
-    download_gamelogs()
+    #download_gamelogs()
+    downloadSRS()
+    #fixSRS()
      

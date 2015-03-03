@@ -28,16 +28,35 @@ def readPickles():
     
 def toData(teams,seasons):
     data=[]
+    z   =[]
     labels = []
     for year,season in seasons.iteritems():
         for game in season:
-            wTeam = teams[year][game.winTeam]
-            wStat = game.getWStats(teams)
-            lTeam = teams[year][game.loseTeam]
-            lStat = game.getLStats(teams)
-            if np.random.random() < 0.5: #scramble winning/losing team
-                r = []
-            a=raw_input("wait")
+            try:
+                wTeam = teams[year][game.winTeam]
+                print wTeam
+                wStat = game.getWStats(teams)
+                print wStat
+                lTeam = teams[year][game.loseTeam]
+                print lTeam
+                lStat = game.getLStats(teams)
+                print lStat
+                if np.random.random() < 0.5: #scramble winning/losing team
+                    r = np.array([wStat[0],wStat[1],lStat[0],lStat[1]]).flatten()
+                    r = np.reshape(r,(1,r.shape[0]))
+                    print game.winStats
+                    wmu = np.subtract(game.winStats,wStat[0])
+                    print wmu
+                else:
+                    r = np.array([lStat,wStat]).flatten()
+                    r = np.reshape(r,(1,r.shape[0]))
+                    print game.loseStats
+                    lmu = np.subtract(game.loseStats,lStat[0])
+                    print lmu
+                    
+                a=raw_input("wait")
+            except KeyError:
+                pass
     return data
                 
 teams, seasons = readPickles()

@@ -40,17 +40,19 @@ class Game:
     def getWStats(self,teams):
         t = teams[str(self.year)][self.winTeam]
         r = []
-        for x in t.mu:
-            r.append(x)
-        for x in t.stds:
-            r.append(x)
-        return np.array(r)
+        return [t.mu, t.stds]
+#        for x in t.mu:
+#            r.append(x)
+#        for x in t.stds:
+#            r.append(x)
+#        return np.array(r)
         
     def getLStats(self,teams):
         t = teams[str(self.year)][self.loseTeam]
         r = []
-        for x in t.mu:
-            r.append(x)
-        for x in t.stds:
-            r.append(x)
-        return np.array(r)
+        return [t.mu, t.stds]
+#        for x in t.mu:
+#            r.append(x)
+#        for x in t.stds:
+#            r.append(x)
+#        return np.array(r)
