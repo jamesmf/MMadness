@@ -12,12 +12,13 @@ class Team:
     its name, and its oppoenent name (as seen in other teams' game-logs)
     """
     
-    def __init__(self,name,fields,mu,stds,season):
+    def __init__(self,name,fields,mu,stds,season,srsScore):
         self.name   = name.replace(' ','-')
         self.fields = fields
         self.mu     = mu
         self.stds   = stds
         self.season = season
+        self.srs    = srsScore
         
         
 class Game:
@@ -38,8 +39,8 @@ class Game:
         self.score      = score
         
     def getWStats(self,teams):
-        t = teams[str(self.year)][self.winTeam]
-        r = []
+        n = self.winTeam.replace(" ",'-')
+        t = teams[str(self.year)][n]
         return [t.mu, t.stds]
 #        for x in t.mu:
 #            r.append(x)
@@ -48,8 +49,8 @@ class Game:
 #        return np.array(r)
         
     def getLStats(self,teams):
-        t = teams[str(self.year)][self.loseTeam]
-        r = []
+        n = self.loseTeam.replace(' ','-')
+        t = teams[str(self.year)][n]
         return [t.mu, t.stds]
 #        for x in t.mu:
 #            r.append(x)

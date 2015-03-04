@@ -7,6 +7,7 @@ from os.path import isfile
 BASE_URL = "http://www.sports-reference.com"
 SCHOOLS_URL = BASE_URL + "/cbb/schools"
 
+#get the list of schools that the website maintains
 def get_schools_list():
     to_return = []
     schools_conn = urllib2.urlopen(SCHOOLS_URL)
@@ -17,7 +18,8 @@ def get_schools_list():
             school_url = line.split("<td align=\"left\" ><a href=\"")[1]
             to_return.append(school_url.split("\"")[0])
     return to_return
-    
+  
+#for every row in the school index,   
 def read_table():
     tree = html.parse('http://www.sports-reference.com/cbb/schools/')
     table = tree.findall('//table')[0]
