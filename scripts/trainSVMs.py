@@ -90,7 +90,7 @@ def toData(teams,seasons):
                 pass
     return data, labels
     
-clf = sklearn.svm.SVC()    
+  
 if not isfile("../data/alldata.pickle") & isfile("../data/alllabels.pickle"): 
     print "Parsing data from txts"       
     teams, seasons = readPickles()
@@ -101,6 +101,9 @@ if not isfile("../data/alldata.pickle") & isfile("../data/alllabels.pickle"):
     with open("../data/alllabels.pickle",'wb') as f:
         cp = cPickle.Pickler(f)
         cp.dump(labels)
+    means = np.mean(data,axis=0)
+    stDev = np.std(data,axis=0)
+    data = np.divide(np.subtract(data,means),stDev)
 else:
     print "Reading data from pickles"
     with open("../data/alldata.pickle",'rb') as f:
@@ -109,24 +112,29 @@ else:
         labels = cPickle.load(f)
     print data[0]
     print np.sum(labels)*1./len(labels)
-means = np.mean(data,axis=0)
-stDev = np.std(data,axis=0)
-data = np.divide(np.subtract(data,means),stDev)
+
 l = data.shape[0]
 tl = int(4*l/5)
 train = data[:tl]
 test = data[tl:]
 trainlab = labels[:tl]
 testlab = labels[tl:]
-clf.fit(train,trainlab)
-pred = clf.predict(test)
-count = 0
-correct = 0
-wrong = 0
-for x in pred:
-    if x == testlab[count]:
-        correct +=1
-    else:
-        wrong += 1
-    count+=1
-print correct, wrong, str(correct*1./(correct+wrong))    
+
+Cmat = [0.1, 1, 10]
+kern = ['rbf','linear']
+with open("../cvalidation)
+for C in Cmat:
+    for k in kern:
+        clf = sklearn.svm.SVC(C=C,kernel=k)  
+        clf.fit(train,trainlab)
+        pred = clf.predict(test)
+        count = 0
+        correct = 0
+        wrong = 0
+        for x in pred:
+            if x == testlab[count]:
+                correct +=1
+            else:
+                wrong += 1
+            count+=1
+        print correct, wrong, str(correct*1./(correct+wrong))    

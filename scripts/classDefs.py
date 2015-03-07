@@ -30,13 +30,14 @@ class Game:
     Year is a 4 digit string of season years e. 1011, 1112...
     Score is the difference between the winning and losing team's scores
     """
-    def __init__(self,year,winTeam,loseTeam,winStats,loseStats,score):
+    def __init__(self,year,winTeam,loseTeam,winStats,loseStats,score,oppSRS):
         self.year       = year
         self.winTeam    = winTeam
         self.loseTeam   = loseTeam
         self.winStats   = winStats
         self.loseStats  = loseStats
         self.score      = score
+        self.oppSRS     = oppSRS
         
     def getWStats(self,teams):
         n = self.winTeam.replace(" ",'-')

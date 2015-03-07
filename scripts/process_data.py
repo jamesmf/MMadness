@@ -9,6 +9,7 @@ import re
 import os
 import classDefs
 import cPickle
+import simulation
 
 def read_in_team(txt,year,srs):
     with open(txt,'rb') as f:
@@ -19,6 +20,7 @@ def read_in_team(txt,year,srs):
     count = 0
     standardize = re.compile("[()]")
     x = fieldnames.split("|")
+    topop = 1000000
     for name in x:
         if not name.strip() == 'x':
             f[name]=count
@@ -34,13 +36,19 @@ def read_in_team(txt,year,srs):
     except KeyError:
         print txt
         first_col = f["fg"]
-        last_col = f["opp_pf"]
+        last_col = f["pf"]
+        #last_col = f["opp_pf"]
+        f2={}
+        for x,y in f.iteritems():
+            if y <= last_col:
+                f2[x] = int(y)-int(first_col)
         stats = []
         #print lines
         for row in lines[1:]:
             spl = row[:-1].split("|")
-            spl.pop(topop)
-            out = spl[first_col:last_col]
+            if len(spl) > topop:
+                spl.pop(topop)
+            out = spl[first_col:last_col+1]
             stats.append(out)
         
         try:
@@ -62,10 +70,11 @@ def read_in_team(txt,year,srs):
         name = re.sub(standardize,'',name)
         name = name.replace(" ",'-')
         srsScore = srs[year][name]
-        t    = classDefs.Team(name,f,mu,stds,year,srsScore)
+        t    = classDefs.Team(name,f2,mu,stds,year,srsScore,oppSRS)
     return t
     
-    
+def readOppStats(txt,year,teams):
+    team2
     
 #    
 #t = "../data/1011/city-college-of-new-york.txt"
@@ -104,6 +113,17 @@ def processTeams(srs):
                     teams[team.name] = team
                 
         seasons[ystring] = teams
+    for year in range(11,16):
+        ystring = str(year-1)+str(year)
+        teams = {}
+        x = os.listdir("../data/"+ystring+"/")
+        for y in x:
+            p = "../data/"+ystring+"/"+y
+            if p.find(".txt") >-1:
+                team = readOppStats(p,ystring,seasons[ystring]) 
+                if not team == '':
+                    teams[team.name] = team
+            
     return seasons
     
     
@@ -151,6 +171,11 @@ srs = processSRS()
 
 s = processTeams(srs)   
 sg = processGames()
+
+t1 = s["1213"]["butler"]
+t2 = s["1213"]["xavier"]
+simulation.simulate(t1,t2)
+
 
 with open("../data/allTeams.pickle",'wb') as f:
     cp = cPickle.Pickler(f)
