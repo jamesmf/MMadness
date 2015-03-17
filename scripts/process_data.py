@@ -9,7 +9,7 @@ import re
 import os
 import classDefs
 import cPickle
-import simulation
+#import simulation
 
 def read_in_team(txt,year,srs):
     with open(txt,'rb') as f:
@@ -36,7 +36,7 @@ def read_in_team(txt,year,srs):
     except KeyError:
         print txt
         first_col = f["fg"]
-        last_col = f["pf"]
+        last_col = f["tov"]
         #last_col = f["opp_pf"]
         f2={}
         for x,y in f.iteritems():
@@ -44,8 +44,22 @@ def read_in_team(txt,year,srs):
                 f2[x] = int(y)-int(first_col)
         stats = []
         #print lines
+        srssum=0
+        gamecount=0
         for row in lines[1:]:
-            spl = row[:-1].split("|")
+            spl = row.split("|")
+            oname = spl[f["opp_id"]]
+            oname = re.sub(standardize,'',oname)
+            oname = oname.replace(" ",'-').lower()
+            try:
+                s = srs[year][oname]
+            except KeyError:
+                s = -5.
+            try:
+                srssum+=float(s)
+                gamecount+=1
+            except ValueError:
+                pass
             if len(spl) > topop:
                 spl.pop(topop)
             out = spl[first_col:last_col+1]
@@ -53,7 +67,7 @@ def read_in_team(txt,year,srs):
         
         try:
             n = np.array(stats,dtype =np.float32)
-        except ValueError as e:
+        except ValueError:
             count1=0
             for a in stats:
                 count2=0
@@ -70,13 +84,95 @@ def read_in_team(txt,year,srs):
         name = re.sub(standardize,'',name)
         name = name.replace(" ",'-')
         srsScore = srs[year][name]
-        t    = classDefs.Team(name,f2,mu,stds,year,srsScore,oppSRS)
+        avgsrs = srssum/gamecount
+        t    = classDefs.Team(name,f2,mu,stds,year,srsScore,avgsrs)
     return t
     
 def readOppStats(txt,year,teams):
-    team2
+    #figure out the %change in opposing team's stats per game
+    with open(txt,'rb') as f:
+        lines = f.readlines()
+        
+    fieldnames = lines[0][:-2]
+    f = {}
+    count = 0
+    standardize = re.compile("[()]")
+    x = fieldnames.split("|")
+    topop = 1000000
+    for name in x:
+        if not name.strip() == 'x':
+            f[name]=count
+            count+=1
+        else:
+            topop = count
     
-#    
+    try:
+        a = f["year_min"]
+        print a
+        os.remove(txt)
+        return ''
+    except KeyError:
+        print txt
+        first_col = f["opp_fg"]
+        last_col = f["opp_tov"]
+        #last_col = f["opp_pf"]
+        f2={}
+        for x,y in f.iteritems():
+            if y <= last_col:
+                f2[x] = int(y)-int(first_col)
+        stats = []
+        #print lines
+        for row in lines[1:]:
+
+            spl = row[:-1].split("|")
+            oname = spl[f["opp_id"]]
+            oname = re.sub(standardize,'',oname)
+            oname = oname.replace(" ",'-').lower()
+            try:
+                oppon = teams[oname]
+                om = oppon.mu
+                ost = oppon.stds
+                if len(spl) > topop:
+                    spl.pop(topop)
+                out = spl[first_col:last_col+1]
+                out = [x if not x=='' else 0.0001 for x in out]
+                out = np.subtract(np.array(out,dtype=np.float),np.array(om))
+                out = np.divide(np.array(out),np.array(ost))
+                out = np.multiply(np.array(out),(1.-oppon.avgOppSRS))
+                stats.append(out)
+            except KeyError:
+                pass
+        
+        try:
+            n = np.array(stats,dtype =np.float32)
+        except ValueError:
+            count1=0
+            for a in stats:
+                count2=0
+                for b in a:
+                    if (b.replace(' ','')=='') | (b==' '):
+                        print b  
+                        stats[count1][count2] = 0.
+                    count2+=1
+                count1+=1
+            n = np.array(stats,dtype = np.float32)
+        stds = np.std(n,axis=0)
+        mu   = np.mean(n,axis=0)
+        name = txt.split("/")[-1].replace(".txt",'')
+        name = re.sub(standardize,'',name)
+        name = name.replace(" ",'-')
+        old = teams[name]
+        oldf=old.fields.copy()
+        oldf.update(f2)
+        oldmu = np.multiply(old.mu,(1+old.avgOppSRS))
+        mu2 = np.append(oldmu,mu,axis=0)
+        stds2 = np.append(old.stds,stds,axis=0)
+        t    = classDefs.Team(name,oldf,mu2,stds2,year,old.srs,old.avgOppSRS)
+    return t
+    
+
+
+  
 #t = "../data/1011/city-college-of-new-york.txt"
 #read_in_team(t)
     
@@ -101,6 +197,7 @@ def processSRS():
 
 def processTeams(srs):
     seasons={}
+    seasons2={}
     for year in range(11,16):
         ystring = str(year-1)+str(year)
         teams = {}
@@ -115,16 +212,17 @@ def processTeams(srs):
         seasons[ystring] = teams
     for year in range(11,16):
         ystring = str(year-1)+str(year)
-        teams = {}
+        newteams = {}
         x = os.listdir("../data/"+ystring+"/")
         for y in x:
             p = "../data/"+ystring+"/"+y
             if p.find(".txt") >-1:
                 team = readOppStats(p,ystring,seasons[ystring]) 
                 if not team == '':
-                    teams[team.name] = team
+                    newteams[team.name] = team
+        seasons2[year] = newteams
             
-    return seasons
+    return seasons2
     
     
 def processGames():
@@ -172,9 +270,9 @@ srs = processSRS()
 s = processTeams(srs)   
 sg = processGames()
 
-t1 = s["1213"]["butler"]
-t2 = s["1213"]["xavier"]
-simulation.simulate(t1,t2)
+#t1 = s["1213"]["butler"]
+#t2 = s["1213"]["xavier"]
+#simulation.simulate(t1,t2)
 
 
 with open("../data/allTeams.pickle",'wb') as f:

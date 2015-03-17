@@ -55,7 +55,7 @@ def table_parse(url,parse):
                                 x = subelement.get("href")
                     r.append(x)
                 table.append(r)
-    print header_dict
+    #print header_dict
     return header_dict, table
                     
 def write_names():               
@@ -70,7 +70,7 @@ def write_names():
             pass
         if row[0] == "Rk":
             pass
-        elif (not row[ncaa] == '') & (row[ncaa] > 1):
+        else: #(not row[ncaa] == '') & (row[ncaa] > 1):
             print row[ncaa]
             row[teamname] = row[teamname].split("schools/")[1][:-1]
             table2.append(row[teamname].replace("\n",''))
@@ -84,27 +84,30 @@ def download_gamelogs():
     with open("../data/teamnames.txt","rb") as f:
         names = f.readlines()
     prefix = "20"
-    for year in range(11,16):
+    for year in range(15,16):
         for college in names:
             college = college.replace("\n",'')
             fold = str(year-1)+str(year)
             ystring = prefix+str(year)
             if not isfile("../data/"+fold+"/"+college+".txt"):
-                url = SCHOOLS_URL+"/"+college+"/"+ystring+"-gamelogs.html"
-                print url
-                d,tab = table_parse(url,"no")
-            
-                with open("../data/"+fold+"/"+college+".txt","wb") as f2:
-                    for i in range(0,len(d)):
-                        for k,v in d.iteritems():
-                            if v == i:
-                                f2.write(k+"|")
-                    f2.write("\n")
-                    for row in tab:
-                        if not ((row[0] == "Rk") | (row[1] == "School")):
-                            f2.write(("|".join(row).encode('utf8')))                 
-                            f2.write("\n")
-                print tab
+                try:
+                    url = SCHOOLS_URL+"/"+college+"/"+ystring+"-gamelogs.html"
+                    print url
+                    d,tab = table_parse(url,"no")
+                
+                    with open("../data/"+fold+"/"+college+".txt","wb") as f2:
+                        for i in range(0,len(d)):
+                            for k,v in d.iteritems():
+                                if v == i:
+                                    f2.write(k+"|")
+                        f2.write("\n")
+                        for row in tab:
+                            if not ((row[0] == "Rk") | (row[1] == "School")):
+                                f2.write(("|".join(row).encode('utf8')))                 
+                                f2.write("\n")
+                    #print tab
+                except IndexError:
+                    pass
                 
 def downloadSRS():
     with open("../data/teamnames.txt","rb") as f:
@@ -147,8 +150,8 @@ def fixSRS():
                pass
  
 if __name__ == "__main__":       
-    write_names()  
-    #download_gamelogs()
-    downloadSRS()
+    #write_names()  
+    download_gamelogs()
+    #downloadSRS()
     #fixSRS()
      

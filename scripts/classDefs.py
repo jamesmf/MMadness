@@ -12,13 +12,14 @@ class Team:
     its name, and its oppoenent name (as seen in other teams' game-logs)
     """
     
-    def __init__(self,name,fields,mu,stds,season,srsScore):
+    def __init__(self,name,fields,mu,stds,season,srsScore,avgOppSRS):
         self.name   = name.replace(' ','-')
         self.fields = fields
         self.mu     = mu
         self.stds   = stds
         self.season = season
         self.srs    = srsScore
+        self.avgOppSRS = avgOppSRS
         
         
 class Game:
@@ -30,18 +31,18 @@ class Game:
     Year is a 4 digit string of season years e. 1011, 1112...
     Score is the difference between the winning and losing team's scores
     """
-    def __init__(self,year,winTeam,loseTeam,winStats,loseStats,score,oppSRS):
+    def __init__(self,year,winTeam,loseTeam,winStats,loseStats,score):
         self.year       = year
         self.winTeam    = winTeam
         self.loseTeam   = loseTeam
         self.winStats   = winStats
         self.loseStats  = loseStats
         self.score      = score
-        self.oppSRS     = oppSRS
+        self.oppSRS     = 0
         
     def getWStats(self,teams):
         n = self.winTeam.replace(" ",'-')
-        t = teams[str(self.year)][n]
+        t = teams[self.year][n]
         return [t.mu, t.stds]
 #        for x in t.mu:
 #            r.append(x)
@@ -51,10 +52,13 @@ class Game:
         
     def getLStats(self,teams):
         n = self.loseTeam.replace(' ','-')
-        t = teams[str(self.year)][n]
+        t = teams[self.year][n]
         return [t.mu, t.stds]
 #        for x in t.mu:
 #            r.append(x)
 #        for x in t.stds:
 #            r.append(x)
 #        return np.array(r)
+        
+    def updateSRS(self,srs):
+        self.srs=srs

@@ -21,6 +21,16 @@ import sklearn
 from sklearn import svm
 from os.path import isfile
 import cPickle
+from sklearn.decomposition import PCA
+
+
+class predictor:
+    
+    def __init__(self,model,means,stds,pca):
+        self.model = model
+        self.means = means
+        self.stds = stds
+        self.pca = pca
 
 def readPickles():
     with open("../data/allGames.pickle",'rb') as f:
@@ -38,13 +48,16 @@ def readPickles():
     
 def toData(teams,seasons):
     data=[]
-    z   =[]
     labels = []
     for year,season in seasons.iteritems():
+        year = int(year[2:])
+        print year
         for game in season:
             try:
+                game.year = year
                 #print str(game.year)+" WTeam: " + str(game.winTeam) + "LTeam: "+ str(game.loseTeam)
                 wTeam = teams[year][game.winTeam]
+
                 wStat = game.getWStats(teams)
                 wSRS  = wTeam.srs
 #                print "game winner stats:" + str(wStat)
@@ -58,9 +71,11 @@ def toData(teams,seasons):
                     l = [1]
                     r = []
                     r = np.append(r,wSRS)
+                    r = np.append(r,wTeam.avgOppSRS)
                     r = np.append(r,wStat[0])
                     r = np.append(r,wStat[1])
                     r = np.append(r,lSRS)
+                    r = np.append(r,lTeam.avgOppSRS)
                     r = np.append(r,lStat[0])
                     r = np.append(r,lStat[1])
                     r = np.array(r).flatten()
@@ -70,9 +85,11 @@ def toData(teams,seasons):
                     l = [0]  
                     r = []
                     r = np.append(r,lSRS)
+                    r = np.append(r,lTeam.avgOppSRS)
                     r = np.append(r,lStat[0])
                     r = np.append(r,lStat[1])
                     r = np.append(r,wSRS)
+                    r = np.append(r,wTeam.avgOppSRS)
                     r = np.append(r,wStat[0])
                     r = np.append(r,wStat[1])
                     r = np.array(r).flatten()
@@ -86,12 +103,13 @@ def toData(teams,seasons):
                     labels = np.append(labels,l,axis=0)
 
             except KeyError as e:
-                #print "No game or team: " + str(e) 
+                print "No game or team: " + str(e) 
                 pass
     return data, labels
     
-  
-if not isfile("../data/alldata.pickle") & isfile("../data/alllabels.pickle"): 
+
+print (isfile("../data/alldata.pickle"))
+if not (isfile("../data/alldata.pickle") & isfile("../data/alllabels.pickle")): 
     print "Parsing data from txts"       
     teams, seasons = readPickles()
     data,labels = toData(teams, seasons)
@@ -101,40 +119,81 @@ if not isfile("../data/alldata.pickle") & isfile("../data/alllabels.pickle"):
     with open("../data/alllabels.pickle",'wb') as f:
         cp = cPickle.Pickler(f)
         cp.dump(labels)
-    means = np.mean(data,axis=0)
-    stDev = np.std(data,axis=0)
-    data = np.divide(np.subtract(data,means),stDev)
+#    means = np.mean(data,axis=0)
+#    stDev = np.std(data,axis=0)
+#    data = np.divide(np.subtract(data,means),stDev)
+    
+
+
+    
 else:
     print "Reading data from pickles"
     with open("../data/alldata.pickle",'rb') as f:
         data = cPickle.load(f)
     with open("../data/alllabels.pickle",'rb') as f:
         labels = cPickle.load(f)
-    print data[0]
-    print np.sum(labels)*1./len(labels)
 
-l = data.shape[0]
-tl = int(4*l/5)
-train = data[:tl]
-test = data[tl:]
-trainlab = labels[:tl]
-testlab = labels[tl:]
+print "standardizing"
+means = np.mean(data,axis=0)
+stDev = np.std(data,axis=0)
+data = np.divide(np.subtract(data,means),stDev) 
+print data[0]
+print means.shape
+print stDev.shape
 
-Cmat = [0.1, 1, 10]
-kern = ['rbf','linear']
-with open("../cvalidation)
-for C in Cmat:
-    for k in kern:
-        clf = sklearn.svm.SVC(C=C,kernel=k)  
-        clf.fit(train,trainlab)
-        pred = clf.predict(test)
-        count = 0
-        correct = 0
-        wrong = 0
-        for x in pred:
-            if x == testlab[count]:
-                correct +=1
-            else:
-                wrong += 1
-            count+=1
-        print correct, wrong, str(correct*1./(correct+wrong))    
+print "standardized"       
+        
+print "pca time"        
+pca = PCA(n_components=27)
+X = pca.fit_transform(data)
+print "explained variance:"
+print(pca.explained_variance_ratio_)
+
+  
+
+clf = sklearn.svm.SVC(probability=True)
+print "fitting SVM"
+clf.fit(X, labels) 
+
+print "storing"
+model = predictor(clf,means,stDev,pca)
+
+with open("../data/modelwPCA.pickle",'wb') as f:
+    cp = cPickle.Pickler(f)
+    cp.dump(model)
+
+#
+#l = data.shape[0]
+#tl = int(4*l/5)
+#train = data[:tl]
+#test = data[tl:]
+#trainlab = labels[:tl]
+#testlab = labels[tl:]
+#
+#Cmat = [0.1, 1.0, 10]
+#kern = ['rbf','linear']
+##with open("../cvalidation)
+##clf = sklearn.svm.SVC(probability=True)
+##clf.fit(train,trainlab)
+##print clf.score(test,testlab)
+#with open("results.txt",'wb') as f:
+#    
+#    for C in Cmat:
+#        for k in kern:
+#            clf = sklearn.svm.SVC(C=C,kernel=k,probability=True)  
+#            clf.fit(train,trainlab)
+#            pred = clf.predict(test)
+#            count = 0
+#            correct = 0
+#            wrong = 0
+#            for x in pred:
+#                if x == testlab[count]:
+#                    correct +=1
+#                else:
+#                    wrong += 1
+#                count+=1
+#            print "score function :" + str(clf.score(test,testlab))
+#            print "my scoring :" + str(correct)+"\t"+ str(wrong) +"\t" + str(correct*1./(correct+wrong))
+#            f.write("\n"+str(clf)+"\n\n")
+#            f.write("score function :" +str(clf.score(test,testlab)))
+#            f.write("my scoring :" + str(correct)+"\t"+ str(wrong) +"\t" + str(correct*1./(correct+wrong)))

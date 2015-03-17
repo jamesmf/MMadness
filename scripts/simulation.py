@@ -20,8 +20,9 @@ exponential = np.mean(-eventExp*np.log(u))
 
 class gameSim:
     
-    def __init__(self,t1rates,t2rates):
+    def __init__(self,t1rates,t2rates,t1percs,t2percs):
         self.t1score=0
+        self.percs = [t1percs,t2percs]
         self.t2score=0
         self.time = 0
         self.rates=[t1rates,t2rates]
@@ -51,12 +52,14 @@ class gameSim:
         print actioncounts
         return self.t1score, self.t2score
         
+    def take2(self):
+        
+        
     
 
 def simulate(Team1,Team2):
     gameSim=initTeams(Team1,Team2)
-    print gameSim.runGame()
-    print 
+    print gameSim.runGame() 
     return gameSim
     
 def initTeams(Team1,Team2):
@@ -75,6 +78,7 @@ def initTeams(Team1,Team2):
     t1tov = srsAdjust(Team1.srs,Team1.mu[TOVn],"down")
     t1opptov = srsAdjust(Team1.srs,Team1.mu[OPPTOVn],"up")
     t1Rates = [1./t1fga, 1./t1fg3, 1./(np.mean(t1tov+t1opptov)+t1oppstl+t1oppblk)]
+    t1percs = []
     
     t2fga = srsAdjust(Team2.srs,Team2.mu[FGAn],"up")
     t2fg3 = srsAdjust(Team2.srs,Team2.mu[TPAn],"up")
@@ -97,8 +101,7 @@ def srsAdjust(srs,stat,direction):
     else:
         return stat
         
-def srsAdjustVec(srs,stats):
-        
+
 
         
     
