@@ -144,7 +144,7 @@ print stDev.shape
 print "standardized"       
         
 print "pca time"        
-pca = PCA(n_components=27)
+pca = PCA(n_components=10)
 X = pca.fit_transform(data)
 print "explained variance:"
 print(pca.explained_variance_ratio_)
